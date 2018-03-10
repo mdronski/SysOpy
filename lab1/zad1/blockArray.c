@@ -1,7 +1,6 @@
-#include <malloc.h>
-#include <string.h>
-#include <stdlib.h>
-##include "blockArray.h"
+#include "blockArray.h"
+
+char staticAllocatedArray[1000][200];
 
 int asciiSum(char* block){
     int sum = 0;
@@ -11,75 +10,93 @@ int asciiSum(char* block){
     return sum;
 }
 
-BlockArray initArrayDynamic(int array_size, int block_size){
-
-    BlockArray* array = (BlockArray*) calloc(1, sizeof(BlockArray));
-    char** stringArray = (char**) calloc(array_size, sizeof(char*));
-
-    array->array = stringArray;
+BlockArray *initArray(int array_size, int block_size, int isDynamic) {
+    BlockArray *array = (BlockArray *) calloc(1, sizeof(BlockArray));
+    if (isDynamic) {
+        char **stringArray = (char **) calloc((size_t) array_size, sizeof(char *));
+        array->array = stringArray;
+        array->size_max = array_size;
+        array->size_block = block_size;
+        array->isDynamicAllocated = 1;
+        return array;
+    }
+    array->array =(char **) staticAllocatedArray;
     array->size_max = array_size;
     array->size_block = block_size;
-
-    return *array;
+    array->isDynamicAllocated = 0;
+    return  array;
 }
 
-void deleteArray(BlockArray* blockArray){
-    for (int i = 0; i < blockArray->size_max; ++i) {
-        free(blockArray->array[i]);
+void cleanStaticArray(BlockArray *staticArray){
+    for (int i = 0; i < staticArray->size_max; ++i) {
+            staticArray->array[i] = "";
     }
 }
 
-void addBlock(BlockArray blockArray, int index, char* block){
-    if (index >= blockArray.size_max){
+void deleteArray(BlockArray* blockArray){
+    if (blockArray->isDynamicAllocated) {
+        for (int i = 0; i < blockArray->size_max; ++i) {
+            free(blockArray->array[i]);
+        }
+        free(blockArray->array);
+        free(blockArray);
+        return;
+    } else{
+        cleanStaticArray(blockArray);
+    }
+}
+
+void addBlock(BlockArray* blockArray, int index, char* block){
+    if (index >= blockArray->size_max){
         printf("%s\n", "Index is too big");
         return;
-    }else if(strlen(block)>=blockArray.size_block) {
+    }else if(strlen(block)>=blockArray->size_block) {
         printf("%s\n", "String is too long for this array.");
         return;
-        }
-        else {
-            if (blockArray.array[index] != NULL) removeBlock(&blockArray, index);
-            blockArray.array[index] = (char*) calloc(blockArray.size_block, sizeof(char));
-            strcpy(blockArray.array[index], block);
-        }
+    }
+    else {
+        if (blockArray->isDynamicAllocated) {
+            if (blockArray->array[index] != NULL) removeBlock(blockArray, index);
+            blockArray->array[index] = (char *) calloc((size_t) blockArray->size_block, sizeof(char));
+            strcpy(blockArray->array[index], block);
+            return;
+        } else
+            blockArray->array[index] = block;
+    }
 }
 
 void removeBlock(BlockArray* blockArray, int index){
-    free(blockArray->array[index]);
-    blockArray->array[index] = NULL;
+    if (blockArray->isDynamicAllocated) {
+        free(blockArray->array[index]);
+        blockArray->array[index] = NULL;
+        return;
+    }
+        blockArray->array[index] = "";
 }
 
-void printArray(BlockArray blockArray){
-    for (int i=0; i<blockArray.size_max; i++){
-        if (blockArray.array[i] == NULL) printf("\n");
+void printArray(BlockArray* blockArray){
+    for (int i=0; i<blockArray->size_max; i++){
+        if (blockArray->array[i] == NULL) printf("\n");
         else
-        printf("%s %d\n", blockArray.array[i], asciiSum(blockArray.array[i]));
+            printf("%s %d\n", blockArray->array[i], asciiSum(blockArray->array[i]));
     }
     printf("\n");
 }
 
-char* findClosestByAscii(BlockArray blockArray, int index){
-    char* tmpClolsestBlock;
-    int tmpClosestSum;
-    int sum = asciiSum(blockArray.array[index]);
+char* findClosestByAscii(BlockArray* blockArray, int index){
+    char* tmpClosestBlock;
+    int tmpClosestSum = 9999999;
+    int sum = asciiSum(blockArray->array[index]);
     int tmpSum;
 
-    if (index == 0){
-        tmpClolsestBlock = blockArray.array[1];
-    } else{
-        tmpClolsestBlock = blockArray.array[0];
-    }
-
-    tmpClosestSum = asciiSum(tmpClolsestBlock);
-
-    for (int i = 0; i < blockArray.size_max; ++i) {
+    for (int i = 0; i < blockArray->size_max; ++i) {
         if (i != index){
-            tmpSum = asciiSum(blockArray.array[i]);
-            if (abs(sum - tmpSum) < tmpClosestSum ){
+            tmpSum = asciiSum(blockArray->array[i]);
+            if ((abs(sum - tmpSum) < tmpClosestSum) && tmpSum!=0){
                 tmpClosestSum = tmpSum;
-                tmpClolsestBlock = blockArray.array[i];
+                tmpClosestBlock = blockArray->array[i];
             }
         }
     }
-    return tmpClolsestBlock;
+    return tmpClosestBlock;
 }
