@@ -86,6 +86,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    printf("Array size: %d, Block size: %d, Allocation: %s\n", arraySize, blockSize, argv[3]);
+
     struct timespec **timespecTime = malloc(sizeof(struct timespec *));
     clock_t *realTime = malloc(5 * sizeof(clock_t));
     struct tms** tmsTime = malloc(5 * sizeof(struct tms*));
@@ -119,10 +121,12 @@ int main(int argc, char **argv) {
         printf("%lf   ", calculateTime(tmsTime[i-1]->tms_utime, tmsTime[i]->tms_utime));
         printf("%lf ", calculateTime(tmsTime[i-1]->tms_stime, tmsTime[i]->tms_stime));
         sum += calculateTime(realTime[i-1], realTime[i]);
-        printf("\n\n");
+        printf("\n");
     }
 
-    printf("\nŁączny czas pracy prgramu:  %lf\n", sum);
+    printf("\nŁączny czas pracy prgramu:  %lf\n\n", sum);
+
+    deleteArray(testArray);
 
     return 0;
 }
