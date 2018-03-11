@@ -9,7 +9,7 @@ typedef struct BlockArray{
     int isDynamicAllocated;
 } BlockArray;
 
-extern char staticAllocatedArray[1000][200];
+extern char staticAllocatedArray[10000000][600];
 
 int asciiSum(char* block);
 

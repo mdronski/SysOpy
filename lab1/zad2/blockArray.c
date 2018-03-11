@@ -1,6 +1,6 @@
 #include "blockArray.h"
 
-char staticAllocatedArray[1000][200];
+char staticAllocatedArray[10000000][600];
 
 int asciiSum(char* block){
     int sum = 0;
@@ -50,7 +50,7 @@ void addBlock(BlockArray* blockArray, int index, char* block){
     if (index >= blockArray->size_max){
         printf("%s\n", "Index is too big");
         return;
-    }else if(strlen(block)>=blockArray->size_block) {
+    }else if(strlen(block)>blockArray->size_block) {
         printf("%s\n", "String is too long for this array.");
         return;
     }
