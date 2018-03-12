@@ -4,7 +4,12 @@
 #include <string.h>
 #include <zconf.h>
 #include <stdint-gcc.h>
+#include <dlfcn.h>
+
+#ifndef DLL
 #include "blockArray.h"
+#endif
+
 
 char* generateRandomString(int maxSize){
     if (maxSize < 1) return NULL;
@@ -59,27 +64,68 @@ void alternatelyDeleteAndAdd(BlockArray *blockArray, int blocksNumber){
 }
 
 double calculateTime(clock_t start, clock_t end){
-    return (double)(  end -  start)  / sysconf(_SC_CLK_TCK);
+    return (double)( end -  start)  / sysconf(_SC_CLK_TCK);
 }
 
+
+void executeCommand(BlockArray *blockArray, char* command, int iterations){
+    int commandNumber;
+    if (strcmp(command, "find") == 0) {
+        commandNumber = 1;
+    } else if (strcmp(command, "deleteAndAdd") == 0) {
+        commandNumber = 2;
+    } else if (strcmp(command, "alternatelyDelAdd") == 0){
+        commandNumber = 3;
+    } else {
+        commandNumber = 333;
+    }
+
+    printf("command number: %d\n", commandNumber);
+        switch (commandNumber) {
+            case 1:
+                for (int i = 0; i < iterations; ++i) {
+                    findClosestByAscii(blockArray, rand() % blockArray->size_max);
+                }
+                break;
+            case 2:
+                deleteThenAdd(blockArray, iterations);
+                break;
+            case 3:
+                alternatelyDeleteAndAdd(blockArray, iterations);
+                break;
+            default:
+                printf("Wrong argument!\n");
+                return;
+        }
+
+}
+
+
+
 int main(int argc, char **argv) {
-//
-//    struct timespec* buffer = malloc(sizeof(struct timespec));
-//    buffer->tv_sec = 0;
-//    buffer->tv_nsec = 0;
-//    clock_gettime(CLOCK_REALTIME_ALARM, buffer);
-//    printf("%ld %ld \n", buffer->tv_nsec, buffer->tv_sec);
+
+#ifdef DLL
+    void *libraryPtr = dlopen("./blockArray.so", RTLD_LAZY);
+    if(!libraryPtr){
+        printf("%s\n", "Unable to open library!");
+        return 1;
+    }
+    BlockArray* (*initArray)(int, int, int) = dlsym(handle,"my_library_function");
+    void (*deleteArray)(BlockArray*);
+    void (*addBlock)(BlockArray*, int, char*);
+    void (*removeBlock)(BlockArray*, int);
+    char* (*findClosestByAscii)(BlockArray*, int);
+
+#endif
+
     srand((unsigned int) time(NULL));
     int arraySize = (int) strtol(argv[1], '\0', 10);
     int blockSize = (int) strtol(argv[2], '\0', 10);
-//
-//  int  arraySize = 500000;
-//  int  blockSize = 300;
-//
+
     int isDynamic;
-    if (strcmp(argv[3], "dynamic")) {
+    if (strcmp(argv[3], "dynamic") == 0) {
         isDynamic = 1;
-    } else if (strcmp(argv[3], "static")){
+    } else if (strcmp(argv[3], "static") == 0){
         isDynamic = 0;
     } else {
         printf("Wrong type of memory allocation! Use \"dynamic\" or \"static\"");
@@ -103,30 +149,48 @@ int main(int argc, char **argv) {
     fillArray(testArray);
     realTime[1] = times(tmsTime[1]);
 
-    findClosestByAscii(testArray, rand() % testArray->size_max );
-    realTime[2] = times(tmsTime[2]);
+    for (int j = 4; argv[j]; j += 2) {
+//        printf("Executing: %s \n", argv[j]);
+        executeCommand(testArray, argv[j], (int) strtol(argv[j+1], NULL, 10));
+        realTime[j/2] = times(tmsTime[j/2]);
+    }
 
-    removeSpecificNumberOfBlocks(testArray, testArray->size_max/2, 0);
-    realTime[3] = times(tmsTime[3]);
-
-    alternatelyDeleteAndAdd(testArray, testArray->size_max/2);
-    realTime[4] = times(tmsTime[4]);
+//
+//    findClosestByAscii(testArray, rand() % testArray->size_max );
+//    realTime[2] = times(tmsTime[2]);
+//
+//    deleteThenAdd(testArray, testArray->size_max/2);
+//    realTime[3] = times(tmsTime[3]);
+//
+//    alternatelyDeleteAndAdd(testArray, testArray->size_max/2);
+//    realTime[4] = times(tmsTime[4]);
 
 
     double sum = 0;
     printf("   Real      User      System\n");
-    for (int i = 1; i < 5; ++i) {
-        printf("%d. \n", i);
-        printf("%lf   ", calculateTime(realTime[i-1], realTime[i]));
-        printf("%lf   ", calculateTime(tmsTime[i-1]->tms_utime, tmsTime[i]->tms_utime));
-        printf("%lf ", calculateTime(tmsTime[i-1]->tms_stime, tmsTime[i]->tms_stime));
-        sum += calculateTime(realTime[i-1], realTime[i]);
+        printf("%s: \n", "Allocating");
+        printf("%lf   ", calculateTime(realTime[0], realTime[1]));
+        printf("%lf   ", calculateTime(tmsTime[0]->tms_utime, tmsTime[1]->tms_utime));
+        printf("%lf ", calculateTime(tmsTime[0]->tms_stime, tmsTime[1]->tms_stime));
+        sum += calculateTime(realTime[0], realTime[1]);
+    printf("\n");
+
+    for (int i = 4; argv[i]; i+=2) {
+        printf("%s: \n", argv[i]);
+        printf("%lf   ", calculateTime(realTime[i/2-1], realTime[i/2]));
+        printf("%lf   ", calculateTime(tmsTime[i/2-1]->tms_utime, tmsTime[i/2]->tms_utime));
+        printf("%lf ", calculateTime(tmsTime[i/2-1]->tms_stime, tmsTime[i/2]->tms_stime));
+        sum += calculateTime(realTime[i/2-1], realTime[i/2]);
         printf("\n");
     }
 
     printf("\nŁączny czas pracy prgramu:  %lf\n\n", sum);
 
     deleteArray(testArray);
+
+#ifdef DLL
+    dlclose(libraryPtr);
+#endif
 
     return 0;
 }

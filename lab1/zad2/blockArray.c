@@ -59,9 +59,12 @@ void addBlock(BlockArray* blockArray, int index, char* block){
             if (blockArray->array[index] != NULL) removeBlock(blockArray, index);
             blockArray->array[index] = (char *) calloc((size_t) blockArray->size_block, sizeof(char));
             strcpy(blockArray->array[index], block);
+            free(block);
             return;
-        } else
+        } else {
+            removeBlock(blockArray, index);
             blockArray->array[index] = block;
+        }
     }
 }
 
