@@ -1,1 +1,0 @@
-/usr/bin/cc -g   CMakeFiles/zad2.dir/main.c.o CMakeFiles/zad2.dir/blockArray.c.o  -o zad2 

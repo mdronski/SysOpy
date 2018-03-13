@@ -1,11 +1,15 @@
-all: compile
+CC = gcc -Wall -std=c99
+all: compile tests clean
 
 compile:
-	gcc -c -Wall blockArray.c
-	gcc -c -Wall main.c
-	gcc main.o blockArray.o -Wall -o main
+	$(CC) -c -Wall blockArray.c
+	$(CC) -c -Wall main.c
+	$(CC) main.o blockArray.o -o main
 
-dynamic:
-	gcc -Wall -c -fPIC blockArray.c -o blockArray.o
-	gcc -shared blockArray.o -o libblockArray.so
-	gcc -Wall -Wl,-rpath=. -L. main.c -lblockArray -o mainDynamic -ldl -D DLL
+tests:
+	echo "" > raport2.txt
+	./main 1000000 100 dynamic find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
+	./main 500000 100 dynamic find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
+
+clean:
+	rm -f *.o

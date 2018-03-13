@@ -1,12 +1,13 @@
+CC = gcc -Wall -std=c99
 all: static shared clean
 
 static:
-	gcc -c -Wall blockArray.c
+	$(CC) -c blockArray.c
 	ar rcs libblockArray.a blockArray.o
 
 shared:
-	gcc -c -Wall -fPIC blockArray.c
-	gcc -shared -fPIC -o libblockArray.so blockArray.o
+	$(CC) -c -fPIC blockArray.c
+	$(CC) -shared -fPIC -o libblockArray.so blockArray.o
 
 clean:
 	rm -f *.o
