@@ -35,4 +35,7 @@ tests:
 	./dynamicMain 1000000 300 static find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3a.txt
 
 clean:
-	rm -f *.o
+	rm -f *.o *.a
+
+clean_exe:
+	rm -f *Main*

@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("Array size: %d, Block size: %d, Allocation: %s", arraySize, blockSize, argv[3]);
+    printf("Array size: %d, Block size: %d, Allocation: %s ", arraySize, blockSize, argv[3]);
     for (int i = 4; argv[i]; i+=2) {
         printf("%s: %s, ", argv[i], argv[i+1]);
     }

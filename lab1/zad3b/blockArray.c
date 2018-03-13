@@ -1,6 +1,6 @@
 #include "blockArray.h"
 
-char staticAllocatedArray[10000000][600];
+char staticAllocatedArray[ARRAY_SIZE][BLOCK_SIZE];
 
 int asciiSum(char* block){
     int sum = 0;
@@ -29,7 +29,7 @@ BlockArray *initArray(int array_size, int block_size, int isDynamic) {
 
 void cleanStaticArray(BlockArray *staticArray){
     for (int i = 0; i < staticArray->size_max; ++i) {
-            staticArray->array[i] = "";
+        staticArray->array[i] = "";
     }
 }
 
@@ -71,7 +71,7 @@ void removeBlock(BlockArray* blockArray, int index){
         blockArray->array[index] = NULL;
         return;
     }
-        blockArray->array[index] = "";
+    blockArray->array[index] = "";
 }
 
 void printArray(BlockArray* blockArray){
@@ -83,20 +83,18 @@ void printArray(BlockArray* blockArray){
     printf("\n");
 }
 
-char* findClosestByAscii(BlockArray* blockArray, int index){
-    char* tmpClosestBlock;
+char* findClosestByAscii(BlockArray* blockArray, int value){
+    char* tmpClosestBlock = NULL;
     int tmpClosestSum = 9999999;
-    int sum = asciiSum(blockArray->array[index]);
+    int sum = value;
     int tmpSum;
 
     for (int i = 0; i < blockArray->size_max; ++i) {
-        if (i != index){
             tmpSum = asciiSum(blockArray->array[i]);
             if ((abs(sum - tmpSum) < tmpClosestSum) && tmpSum!=0){
                 tmpClosestSum = tmpSum;
                 tmpClosestBlock = blockArray->array[i];
             }
         }
-    }
     return tmpClosestBlock;
 }

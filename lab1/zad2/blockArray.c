@@ -84,7 +84,7 @@ void printArray(BlockArray* blockArray){
 }
 
 char* findClosestByAscii(BlockArray* blockArray, int value){
-    char* tmpClosestBlock;
+    char* tmpClosestBlock = NULL;
     int tmpClosestSum = 9999999;
     int sum = value;
     int tmpSum;

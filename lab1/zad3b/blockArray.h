@@ -9,7 +9,10 @@ typedef struct BlockArray{
     int isDynamicAllocated;
 } BlockArray;
 
-extern char staticAllocatedArray[10000000][600];
+#define ARRAY_SIZE 5000000
+#define BLOCK_SIZE 1000
+
+extern char staticAllocatedArray[ARRAY_SIZE][BLOCK_SIZE];
 
 int asciiSum(char* block);
 
@@ -23,4 +26,4 @@ void removeBlock(BlockArray* blockArray, int index);
 
 void printArray(BlockArray* blockArray);
 
-char* findClosestByAscii(BlockArray* blockArray, int index);
+char* findClosestByAscii(BlockArray* blockArray, int value);

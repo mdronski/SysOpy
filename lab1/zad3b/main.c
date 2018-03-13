@@ -117,12 +117,9 @@ void executeCommand(BlockArray *blockArray, char* command, int iterations){
         commandNumber = 333;
     }
 
-//    printf("command number: %d\n", commandNumber);
     switch (commandNumber) {
         case 1:
-            for (int i = 0; i < iterations; ++i) {
-                findClosestByAscii(blockArray, rand() % blockArray->size_max);
-            }
+            findClosestByAscii(blockArray, iterations);
             break;
         case 2:
             deleteThenAdd(blockArray, iterations);
@@ -134,7 +131,6 @@ void executeCommand(BlockArray *blockArray, char* command, int iterations){
             printf("Wrong argument!\n");
             return;
     }
-
 }
 
 
@@ -152,8 +148,19 @@ int main(int argc, char **argv) {
 #endif
 
     srand((unsigned int) time(NULL));
+
+    if (argc < 4){
+        printf("Wrong arguments! \n");
+        return 1;
+    }
+
     int arraySize = (int) strtol(argv[1], '\0', 10);
     int blockSize = (int) strtol(argv[2], '\0', 10);
+
+    if (arraySize <= 0 || blockSize <= 0){
+        printf("Wrong array size! \n");
+        return 1;
+    }
 
     int isDynamic;
     if (strcmp(argv[3], "dynamic") == 0) {
@@ -165,8 +172,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("Array size: %d, Block size: %d, Allocation: %s\n", arraySize, blockSize, argv[3]);
-
+    printf("Array size: %d, Block size: %d, Allocation: %s ", arraySize, blockSize, argv[3]);
+    for (int i = 4; argv[i]; i+=2) {
+        printf("%s: %s, ", argv[i], argv[i+1]);
+    }
+    printf("\n");
     struct timespec **timespecTime = malloc(sizeof(struct timespec *));
     clock_t *realTime = malloc(5 * sizeof(clock_t));
     struct tms** tmsTime = malloc(5 * sizeof(struct tms*));
@@ -182,40 +192,27 @@ int main(int argc, char **argv) {
     realTime[1] = times(tmsTime[1]);
 
     for (int j = 4; argv[j]; j += 2) {
-//        printf("Executing: %s \n", argv[j]);
         executeCommand(testArray, argv[j], (int) strtol(argv[j+1], NULL, 10));
         realTime[j/2] = times(tmsTime[j/2]);
     }
 
-//
-//    findClosestByAscii(testArray, rand() % testArray->size_max );
-//    realTime[2] = times(tmsTime[2]);
-//
-//    deleteThenAdd(testArray, testArray->size_max/2);
-//    realTime[3] = times(tmsTime[3]);
-//
-//    alternatelyDeleteAndAdd(testArray, testArray->size_max/2);
-//    realTime[4] = times(tmsTime[4]);
-
-
     double sum = 0;
-    printf("   Real      User      System\n");
-        printf("%s: \n", "Allocating");
-        printf("%lf   ", calculateTime(realTime[0], realTime[1]));
-        printf("%lf   ", calculateTime(tmsTime[0]->tms_utime, tmsTime[1]->tms_utime));
-        printf("%lf ", calculateTime(tmsTime[0]->tms_stime, tmsTime[1]->tms_stime));
-        sum += calculateTime(realTime[0], realTime[1]);
+    printf("Real    User    System\n");
+    printf("%s: \n", "Allocating");
+    printf("%.2lf    ", calculateTime(realTime[0], realTime[1]));
+    printf("%.2lf     ", calculateTime(tmsTime[0]->tms_utime, tmsTime[1]->tms_utime));
+    printf("%.2lf ", calculateTime(tmsTime[0]->tms_stime, tmsTime[1]->tms_stime));
+    sum += calculateTime(realTime[0], realTime[1]);
     printf("\n");
 
     for (int i = 4; argv[i]; i+=2) {
         printf("%s: \n", argv[i]);
-        printf("%lf   ", calculateTime(realTime[i/2-1], realTime[i/2]));
-        printf("%lf   ", calculateTime(tmsTime[i/2-1]->tms_utime, tmsTime[i/2]->tms_utime));
-        printf("%lf ", calculateTime(tmsTime[i/2-1]->tms_stime, tmsTime[i/2]->tms_stime));
+        printf("%.2lf    ", calculateTime(realTime[i/2-1], realTime[i/2]));
+        printf("%.2lf     ", calculateTime(tmsTime[i/2-1]->tms_utime, tmsTime[i/2]->tms_utime));
+        printf("%.2lf \n", calculateTime(tmsTime[i/2-1]->tms_stime, tmsTime[i/2]->tms_stime));
         sum += calculateTime(realTime[i/2-1], realTime[i/2]);
-        printf("\n");
     }
-    printf("\nFull time:  %lf\n\n", sum);
+    printf("Full time:              %.2lf\n", sum);
 
     deleteArray(testArray);
 
