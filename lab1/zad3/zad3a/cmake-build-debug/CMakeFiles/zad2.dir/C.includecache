@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/mdronski/SO/lab1/zad2/blockArray.c
+blockArray.h
+/home/mdronski/SO/lab1/zad2/blockArray.h
+
+/home/mdronski/SO/lab1/zad2/blockArray.h
+malloc.h
+-
+string.h
+-
+stdlib.h
+-
+
+/home/mdronski/SO/lab1/zad2/main.c
+stdio.h
+-
+time.h
+-
+sys/times.h
+-
+string.h
+-
+zconf.h
+-
+stdint-gcc.h
+-
+blockArray.h
+/home/mdronski/SO/lab1/zad2/blockArray.h
+

@@ -1,0 +1,199 @@
+
+Static libraries:
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+1.460000   1.340000   0.110000 
+find: 
+0.480000   0.470000   0.000000 
+deleteAndAdd: 
+0.720000   0.700000   0.030000 
+alternatelyDelAdd: 
+0.710000   0.700000   0.000000 
+
+Łączny czas pracy prgramu:  3.370000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.750000   0.680000   0.060000 
+find: 
+0.490000   0.490000   0.000000 
+deleteAndAdd: 
+0.370000   0.360000   0.010000 
+alternatelyDelAdd: 
+0.370000   0.350000   0.020000 
+
+Łączny czas pracy prgramu:  1.980000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.750000   0.670000   0.070000 
+find: 
+0.480000   0.480000   0.000000 
+deleteAndAdd: 
+0.380000   0.350000   0.020000 
+alternatelyDelAdd: 
+0.360000   0.360000   0.010000 
+
+Łączny czas pracy prgramu:  1.970000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.720000   0.630000   0.080000 
+find: 
+0.480000   0.470000   0.000000 
+deleteAndAdd: 
+0.350000   0.340000   0.020000 
+alternatelyDelAdd: 
+0.330000   0.320000   0.010000 
+
+Łączny czas pracy prgramu:  1.880000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+1.280000   1.180000   0.090000 
+find: 
+0.480000   0.480000   0.000000 
+deleteAndAdd: 
+0.650000   0.620000   0.020000 
+alternatelyDelAdd: 
+0.640000   0.630000   0.010000 
+
+Łączny czas pracy prgramu:  3.050000
+
+Shared libraries:
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+1.460000   1.370000   0.070000 
+find: 
+0.470000   0.470000   0.010000 
+deleteAndAdd: 
+0.720000   0.710000   0.010000 
+alternatelyDelAdd: 
+0.710000   0.690000   0.020000 
+
+Łączny czas pracy prgramu:  3.360000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.770000   0.700000   0.070000 
+find: 
+0.470000   0.470000   0.000000 
+deleteAndAdd: 
+0.380000   0.360000   0.010000 
+alternatelyDelAdd: 
+0.370000   0.350000   0.020000 
+
+Łączny czas pracy prgramu:  1.990000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.790000   0.730000   0.040000 
+find: 
+0.470000   0.480000   0.000000 
+deleteAndAdd: 
+0.390000   0.370000   0.020000 
+alternatelyDelAdd: 
+0.380000   0.370000   0.010000 
+
+Łączny czas pracy prgramu:  2.030000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.730000   0.670000   0.050000 
+find: 
+0.470000   0.470000   0.000000 
+deleteAndAdd: 
+0.360000   0.340000   0.020000 
+alternatelyDelAdd: 
+0.340000   0.310000   0.020000 
+
+Łączny czas pracy prgramu:  1.900000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+1.270000   1.200000   0.070000 
+find: 
+0.480000   0.470000   0.000000 
+deleteAndAdd: 
+0.630000   0.630000   0.000000 
+alternatelyDelAdd: 
+0.620000   0.600000   0.030000 
+
+Łączny czas pracy prgramu:  3.000000
+
+Dynamic libraries:
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+1.460000   1.400000   0.050000 
+find: 
+0.460000   0.460000   0.000000 
+deleteAndAdd: 
+0.750000   0.730000   0.030000 
+alternatelyDelAdd: 
+0.720000   0.700000   0.010000 
+
+Łączny czas pracy prgramu:  3.390000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.750000   0.660000   0.080000 
+find: 
+0.450000   0.450000   0.000000 
+deleteAndAdd: 
+0.370000   0.340000   0.020000 
+alternatelyDelAdd: 
+0.360000   0.350000   0.010000 
+
+Łączny czas pracy prgramu:  1.930000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.750000   0.670000   0.060000 
+find: 
+0.440000   0.450000   0.010000 
+deleteAndAdd: 
+0.370000   0.360000   0.000000 
+alternatelyDelAdd: 
+0.360000   0.350000   0.010000 
+
+Łączny czas pracy prgramu:  1.920000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+0.700000   0.620000   0.070000 
+find: 
+0.450000   0.450000   0.000000 
+deleteAndAdd: 
+0.360000   0.350000   0.010000 
+alternatelyDelAdd: 
+0.330000   0.310000   0.020000 
+
+Łączny czas pracy prgramu:  1.840000
+
+Array size: 500000, Block size: 300, Allocation: dynamic
+   Real      User      System
+Allocating: 
+1.300000   1.230000   0.050000 
+find: 
+0.440000   0.440000   0.000000 
+deleteAndAdd: 
+0.640000   0.630000   0.020000 
+alternatelyDelAdd: 
+0.630000   0.600000   0.020000 
+
+Łączny czas pracy prgramu:  3.010000
+
