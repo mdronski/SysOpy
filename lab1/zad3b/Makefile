@@ -53,12 +53,14 @@ tests:
 	./staticMainO2 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./staticMainO3 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./staticMainOs 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
+	echo >> results3b.txt
 	echo \n Shared libraries: \n >> results3b.txt
 	./sharedMainO0 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./sharedMainO1 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./sharedMainO2 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./sharedMainO3 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./sharedMainOs 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
+	echo >> results3b.txt
 	echo \n Dynamic libraries: \n >> results3b.txt
 	./dynamicMainO0 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./dynamicMainO1 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
