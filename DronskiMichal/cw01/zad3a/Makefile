@@ -17,7 +17,7 @@ dynamic:
 	$(CC) -Wl,-rpath=. -L. main.c -lblockArray -o dynamicMain -ldl -D DLL
 
 tests:
-	echo > results3a.txt
+	#echo > results3a.txt
 	echo Static libraries: >> results3a.txt
 	./staticMain 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3a.txt
 	./staticMain 1000000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3a.txt

@@ -8,8 +8,12 @@ compile:
 
 tests:
 	echo "" > raport2.txt
+	./main 1500000 100 dynamic find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
+	./main 1500000 100 static find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
 	./main 1000000 100 dynamic find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
+	./main 1000000 100 static find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
 	./main 500000 100 dynamic find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
-
+	./main 500000 100 static find 1 deleteAndAdd 100000 alternatelyDelAdd 100000 >> raport2.txt
+	
 clean:
 	rm -f *.o

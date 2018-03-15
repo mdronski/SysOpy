@@ -46,7 +46,7 @@ Os:
 
 
 tests:
-	echo > results3b.txt
+	#echo > results3b.txt
 	echo Static libraries: \n >> results3b.txt
 	./staticMainO0 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
 	./staticMainO1 500000 300 dynamic find 1 deleteAndAdd 250000 alternatelyDelAdd 250000 >> results3b.txt
