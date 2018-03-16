@@ -30,7 +30,7 @@ void generateSys(char *filePath, int recordsNumber, int recordSize) {
 }
 
 void copySys(char *sourceFileName, char *destFileName, int recordsNumber, int recordSize){
-    int destFileDesc = open(destFileName, O_CREAT|O_WRONLY|O_TRUNC, S_IRUSR|S_IWUSR);
+    int destFileDesc = open(destFileName, O_CREAT|O_WRONLY, S_IRUSR|S_IWUSR);
     int sourceFileDesc = open(sourceFileName, O_RDONLY);
     char *buffer = (char *) calloc((size_t) recordSize, sizeof(char));
 
@@ -57,17 +57,13 @@ void sortSys(char *filePath, int recordsNumber, int recordSize){
 
     for (int i = 1; i < recordsNumber; ++i) {
 
-        printf("%d\n", lseek(fileDesc, i*offset, SEEK_SET));
+        lseek(fileDesc, i*offset, SEEK_SET);
 
         if (read(fileDesc, keyBuffer, (size_t) recordSize ) != recordSize){
             printf("Reading from %s failed. Aborting...\n", filePath);
             return;
         }
-        printf("%d\n", lseek(fileDesc, 0, 1));
-        printf("%s", keyBuffer);
-
         lseek(fileDesc, (-2) * offset, SEEK_CUR);
-        printf("%d\n", lseek(fileDesc, 0, 1));
         if (read(fileDesc, tmpBuffer, (size_t) recordSize ) != recordSize) {
             printf("Reading from %s failed. Aborting...\n", filePath);
             return;
