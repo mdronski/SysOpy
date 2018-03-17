@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <zconf.h>
+#include <dirent.h>
+
 
 struct tm *searchedDate;
 int compareType;
@@ -36,14 +38,14 @@ int compareDate(struct tm *fileDate){
 }
 
 
-int lsForNftw(const char *fpath, const struct stat *fileStat, int typeFlag, struct FTW *ftwbuf){
+int printFileInformation(const char *fpath, const struct stat *fileStat, int typeFlag, struct FTW *ftwbuf){
     struct tm *fileDate = calloc(1, sizeof(struct tm));
     localtime_r(&fileStat->st_mtime, fileDate);
     struct passwd *pw = getpwuid(fileStat->st_uid);
     char timeString[15];
     char pathBuffer[PATH_MAX];
 //    printf("%d\n",(compareDate(fileDate)));
-    if (compareDate(fileDate) != compareType) return 0;
+ //   if (compareDate(fileDate) != compareType) return 0;
 
     //File type
     printf("%c", (typeFlag == FTW_D) ? 'd' :
@@ -76,11 +78,48 @@ int lsForNftw(const char *fpath, const struct stat *fileStat, int typeFlag, stru
     return 0;
 }
 
-int testF(const char *fpath, const struct stat *fileStat, int typeFlag, struct FTW *ftwbuf){
-//    printf("%s\n",fpath);
-    return 0;
+
+void printInfo(char *fpath, const struct stat *fileStat, int typeFlag){
+
 }
 
+void lsRecursve(char *fPath) {
+    DIR *direcotry = opendir(fPath);
+//    printf("%s\n", fPath);
+    if (direcotry == NULL) {
+        printf("No such directory was found\n");
+        return; }
+
+    struct dirent *dirEntry;
+    struct stat fileStat;
+    char *path = calloc(PATH_MAX, sizeof(char));
+    strcpy(path, fPath);
+
+
+
+//    printf("Directory: %s\n", fPath);
+
+    while ((dirEntry = readdir(direcotry)) != NULL) {
+//        printf("%s \n", dirEntry->d_name);
+        strcpy(path, fPath);
+        strcat(path, "/");
+        strcat(path, dirEntry->d_name);
+//        printf("%s \n", path);
+
+        if ((strcmp(dirEntry->d_name, ".") == 0 || strcmp(dirEntry->d_name, "..") == 0)) continue;
+
+        if(stat(path, &fileStat) >= 0) {
+            if (S_ISDIR(fileStat.st_mode)) {
+                printFileInformation(path, &fileStat, FTW_D, NULL);
+                lsRecursve(path);
+            } else if(S_ISREG(fileStat.st_mode)) {
+                printFileInformation(path, &fileStat, FTW_F, NULL);
+            }
+        }
+    }
+
+    closedir(direcotry);
+}
 
 int main(int argc, char **argv) {
 
@@ -162,9 +201,9 @@ int main(int argc, char **argv) {
     }
 
 //    printf("\nStart nftw\n");
-    nftw(path, lsForNftw, 10, FTW_PHYS);
+//    nftw(path, printFileInformation, 10, FTW_PHYS);
 //    printf("\nEnd nftw\n");
-
+    lsRecursve(path);
 
     return 0;
 }
