@@ -10,7 +10,7 @@
 #include <pwd.h>
 #include <zconf.h>
 #include <dirent.h>
-
+#include <limits.h>
 
 struct tm *searchedDate;
 int compareType;
@@ -29,8 +29,9 @@ int compare(int y, int x){
 }
 
 int compareDate(struct tm *fileDate){
-    return searchedDate->tm_year != (fileDate->tm_year + 1900) ? compare(searchedDate->tm_year, fileDate->tm_year) :
-           searchedDate->tm_mon != (fileDate->tm_mon + 1)? compare(searchedDate->tm_mon, fileDate->tm_mon) :
+
+    return searchedDate->tm_year != (fileDate->tm_year + 1900) ? compare(searchedDate->tm_year, fileDate->tm_year + 1900) :
+           searchedDate->tm_mon != (fileDate->tm_mon + 1)? compare(searchedDate->tm_mon, fileDate->tm_mon + 1) :
            searchedDate->tm_mday != fileDate->tm_mday ? compare(searchedDate->tm_mday, fileDate->tm_mday) :
            searchedDate->tm_hour != fileDate->tm_hour ? compare(searchedDate->tm_hour, fileDate->tm_hour) :
            searchedDate->tm_min != fileDate->tm_min ? compare(searchedDate->tm_min, fileDate->tm_min) :
@@ -44,8 +45,7 @@ int printFileInformation(const char *fpath, const struct stat *fileStat, int typ
     struct passwd *pw = getpwuid(fileStat->st_uid);
     char timeString[15];
     char pathBuffer[PATH_MAX];
-//    printf("%d\n",(compareDate(fileDate)));
- //   if (compareDate(fileDate) != compareType) return 0;
+    if (compareDate(fileDate) != compareType) return 0;
 
     //File type
     printf("%c", (typeFlag == FTW_D) ? 'd' :
@@ -79,13 +79,8 @@ int printFileInformation(const char *fpath, const struct stat *fileStat, int typ
 }
 
 
-void printInfo(char *fpath, const struct stat *fileStat, int typeFlag){
-
-}
-
 void lsRecursve(char *fPath) {
     DIR *direcotry = opendir(fPath);
-//    printf("%s\n", fPath);
     if (direcotry == NULL) {
         printf("No such directory was found\n");
         return; }
@@ -97,23 +92,21 @@ void lsRecursve(char *fPath) {
 
 
 
-//    printf("Directory: %s\n", fPath);
-
     while ((dirEntry = readdir(direcotry)) != NULL) {
-//        printf("%s \n", dirEntry->d_name);
         strcpy(path, fPath);
         strcat(path, "/");
         strcat(path, dirEntry->d_name);
-//        printf("%s \n", path);
 
         if ((strcmp(dirEntry->d_name, ".") == 0 || strcmp(dirEntry->d_name, "..") == 0)) continue;
 
-        if(stat(path, &fileStat) >= 0) {
+        if(lstat(path, &fileStat) >= 0) {
             if (S_ISDIR(fileStat.st_mode)) {
                 printFileInformation(path, &fileStat, FTW_D, NULL);
                 lsRecursve(path);
             } else if(S_ISREG(fileStat.st_mode)) {
                 printFileInformation(path, &fileStat, FTW_F, NULL);
+            } else if(S_ISLNK(fileStat.st_mode)){
+                printFileInformation(path, &fileStat, FTW_SL, NULL);
             }
         }
     }
@@ -134,9 +127,8 @@ int main(int argc, char **argv) {
 
     struct tm *tmpDate = calloc(1, sizeof(struct tm));
     time_t t = time(NULL);
-//    localtime_r(&t, searchedDate);
     time_t t2 = mktime(searchedDate);
-//    printf("%d\n", 99 > 2);
+
 
     searchedDate->tm_sec = 0;
     char *path = NULL;
@@ -160,17 +152,13 @@ int main(int argc, char **argv) {
 
         if (shortOption == -1)
             break;
-//        printf("%c",(char) shortOption);
         switch (shortOption){
             case 0:
                 break;
             case 'p':
-//                printf("%s ", optarg);
                 path = optarg;
                 break;
             case 'c':
-                //printf("test");
-//                printf("%s ", optarg);
                 compareType = strcmp("<", optarg) == 0 ?  -1 :
                               strcmp("=", optarg) == 0 ?  0 :
                               strcmp(">", optarg) == 0 ?  1 :
@@ -178,11 +166,9 @@ int main(int argc, char **argv) {
                 if (compareType == 303) abort();
                 break;
             case 'y':
-//                printf("%d ",(int) strtol(optarg, '\0', 10));
                 searchedDate->tm_year = (int) strtol(optarg, '\0', 10);
                 break;
             case 'M':
-  //              printf("%d ",(int) strtol(optarg, '\0', 10));
                 searchedDate->tm_mon = (int) strtol(optarg, '\0', 10);
                 break;
             case 'd':
@@ -200,10 +186,11 @@ int main(int argc, char **argv) {
 
     }
 
-//    printf("\nStart nftw\n");
-//    nftw(path, printFileInformation, 10, FTW_PHYS);
-//    printf("\nEnd nftw\n");
+#ifdef NFTW
+    nftw(path, printFileInformation, 10, FTW_PHYS);
+#endif
+#ifdef SYS
     lsRecursve(path);
-
+#endif
     return 0;
 }
