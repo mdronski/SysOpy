@@ -80,6 +80,8 @@ int printFileInformation(const char *fpath, const struct stat *fileStat, int typ
 
 
 void lsRecursve(char *fPath) {
+
+
     DIR *direcotry = opendir(fPath);
     if (direcotry == NULL) {
         printf("No such directory was found\n");
@@ -101,8 +103,14 @@ void lsRecursve(char *fPath) {
 
         if(lstat(path, &fileStat) >= 0) {
             if (S_ISDIR(fileStat.st_mode)) {
-                printFileInformation(path, &fileStat, FTW_D, NULL);
-                lsRecursve(path);
+                pid_t pid = vfork();
+                if (!pid) {
+                    printFileInformation(path, &fileStat, FTW_D, NULL);
+                    printf("forked new proces, pid: %d\n", getpid());
+                    lsRecursve(path);
+                    printf("Exited proces, pid: %d\n", getpid());
+                    exit(0);
+                }
             } else if(S_ISREG(fileStat.st_mode)) {
                 printFileInformation(path, &fileStat, FTW_F, NULL);
             } else if(S_ISLNK(fileStat.st_mode)){
@@ -112,6 +120,7 @@ void lsRecursve(char *fPath) {
     }
 
     closedir(direcotry);
+    return;
 }
 
 int main(int argc, char **argv) {
@@ -123,6 +132,11 @@ int main(int argc, char **argv) {
     searchedDate->tm_hour = 0;
     searchedDate->tm_min = 0;
     searchedDate->tm_sec = 0;
+
+
+    struct tm *tmpDate = calloc(1, sizeof(struct tm));
+    time_t t = time(NULL);
+    time_t t2 = mktime(searchedDate);
 
 
     searchedDate->tm_sec = 0;
