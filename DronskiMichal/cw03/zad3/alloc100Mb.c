@@ -2,10 +2,9 @@
 #include <stdio.h>
 #include <malloc.h>
 
-int SIZE = 1000000;
+int SIZE = 1024*1024;
 
-int main(){
-//  char bigAray1[1000000];
+int main
   printf("Begin allocating\n");
   char *bigAray2 = malloc(SIZE * sizeof(char));
     for (int i = 0; i < SIZE; ++i) {

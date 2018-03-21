@@ -11,28 +11,25 @@
 
 void setLimits(char *cpuArg, char *memArg){
    long int cpuLimit = strtol(cpuArg, NULL, 10);
-   long int memLimit = strtol(memArg, NULL, 10)*1000000;
+   long int memLimit = strtol(memArg, NULL, 10)*1024*1024;
 
-   struct rlimit *cpuRLimit = calloc(1, sizeof(struct rlimit));
-   struct rlimit *memRLimit = calloc(1, sizeof(struct rlimit));
+   struct rlimit cpuRLimit;
+   struct rlimit memRLimit;
 
-    cpuRLimit->rlim_max = (rlim_t) cpuLimit;
-    cpuRLimit->rlim_cur = (rlim_t) cpuLimit;
-    memRLimit->rlim_max = (rlim_t) memLimit;
-    memRLimit->rlim_cur = (rlim_t) memLimit;
+    cpuRLimit.rlim_max = (rlim_t) cpuLimit;
+    cpuRLimit.rlim_cur = (rlim_t) cpuLimit;
+    memRLimit.rlim_max = (rlim_t) memLimit;
+    memRLimit.rlim_cur = (rlim_t) memLimit;
 
-    if(setrlimit(RLIMIT_CPU, cpuRLimit) == -1){
+    if(setrlimit(RLIMIT_CPU, &cpuRLimit) == -1){
         printf("Unable to make cpu limit!\n");
     }
-    if(setrlimit(RLIMIT_DATA, memRLimit) == -1){
+    if(setrlimit(RLIMIT_DATA, &memRLimit) == -1){
         printf("Unable to make memory limit!\n");
     }
-    if(setrlimit(RLIMIT_STACK, memRLimit) == -1){
+    if(setrlimit(RLIMIT_STACK, &memRLimit) == -1){
         printf("Unable to make memory limit!\n");
     }
-    free(cpuRLimit);
-    free(memRLimit);
-
 }
 
 int main(int argc, char *argv[] ) {
