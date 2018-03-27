@@ -1,0 +1,3 @@
+ls -l
+./alloc1Gb
+./fibonacci

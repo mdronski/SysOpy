@@ -11,6 +11,7 @@
 #include <zconf.h>
 #include <dirent.h>
 #include <limits.h>
+#include <wait.h>
 
 struct tm *searchedDate;
 int compareType;
@@ -118,7 +119,6 @@ void lsRecursve(char *fPath) {
             }
         }
     }
-
     closedir(direcotry);
     return;
 }
@@ -126,11 +126,11 @@ void lsRecursve(char *fPath) {
 int main(int argc, char **argv) {
 
     searchedDate = calloc(1, sizeof(struct tm));
-    searchedDate->tm_year = 0;
-    searchedDate->tm_mon = 0;
-    searchedDate->tm_mday = 0;
-    searchedDate->tm_hour = 0;
-    searchedDate->tm_min = 0;
+    searchedDate->tm_year = 2018;
+    searchedDate->tm_mon = 3;
+    searchedDate->tm_mday = 28;
+    searchedDate->tm_hour = 9;
+    searchedDate->tm_min = 50;
     searchedDate->tm_sec = 0;
 
 
