@@ -134,11 +134,6 @@ int main(int argc, char **argv) {
     searchedDate->tm_sec = 0;
 
 
-    struct tm *tmpDate = calloc(1, sizeof(struct tm));
-    time_t t = time(NULL);
-    time_t t2 = mktime(searchedDate);
-
-
     searchedDate->tm_sec = 0;
     char *path = NULL;
     int optionIndex = 0;

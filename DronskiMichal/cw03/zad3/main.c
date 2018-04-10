@@ -27,7 +27,7 @@ int mergeArgs(char* args[128], int argsNumber, int charPattern){
                shuffle(args, i+1, argsNumber-merged);
                merged ++;
            } while ((i < argsNumber-merged) && ((args[i][strlen(args[i])-1] != charPattern ) ||
-                     args[i][strlen(args[i])-1] == charPattern && args[i][strlen(args[i])-2] == '\\'));
+                     (args[i][strlen(args[i])-1] == charPattern && args[i][strlen(args[i])-2] == '\\')));
            args[i][strlen(args[i])-1] = 0;
            args[i] = &args[i][1];
        }
@@ -37,11 +37,10 @@ int mergeArgs(char* args[128], int argsNumber, int charPattern){
 }
 
 void setLimits(char *cpuArg, char *memArg){
-   long int cpuLimit = strtol(cpuArg, NULL, 10);
-   long int memLimit = strtol(memArg, NULL, 10)*1024*1024;
-
-   struct rlimit cpuRLimit;
-   struct rlimit memRLimit;
+    struct rlimit cpuRLimit;
+    struct rlimit memRLimit;
+    long int cpuLimit = strtol(cpuArg, NULL, 10);
+    long int memLimit = strtol(memArg, NULL, 10)*1024*1024;
 
     cpuRLimit.rlim_max = (rlim_t) cpuLimit;
     cpuRLimit.rlim_cur = (rlim_t) cpuLimit;
@@ -145,5 +144,3 @@ int main(int argc, char *argv[] ) {
 
     return 0;
 }
-
-

@@ -9,7 +9,7 @@ int fibonacci(int n){
 int main(){
   printf("Started calculating 45'th fibbonaci number\n");
   long int x = fibonacci(45);
-  printf("45'th Fibonacci number: %d\n", x);
+  printf("45'th Fibonacci number: %ld\n", x);
   perror("Fibbonaci  ");
   return 0;
 }

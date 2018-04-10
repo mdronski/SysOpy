@@ -27,7 +27,7 @@ int mergeArgs(char* args[128], int argsNumber, int charPattern){
                 shuffle(args, i+1, argsNumber-merged);
                 merged ++;
             } while ((i < argsNumber-merged) && ((args[i][strlen(args[i])-1] != charPattern ) ||
-                                                 args[i][strlen(args[i])-1] == charPattern && args[i][strlen(args[i])-2] == '\\'));
+                                                 (args[i][strlen(args[i])-1] == charPattern && args[i][strlen(args[i])-2] == '\\')));
             args[i][strlen(args[i])-1] = 0;
             args[i] = &args[i][1];
         }
@@ -94,5 +94,3 @@ int main(int argc, char *argv[] ) {
 
     return 0;
 }
-
-
