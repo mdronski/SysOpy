@@ -150,7 +150,6 @@ int main(int argc, char *argv[] ) {
             redirected = 0;
         }
 
-
         printf("All comands: %d, waiting for them to exit\n", commandNumber);
         for (int i = 0; i < commandNumber; ++i) {
             wait(NULL);
