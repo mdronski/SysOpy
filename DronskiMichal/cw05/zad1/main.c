@@ -11,7 +11,7 @@
 
 #define DESC_NUMB  10
 int descryptors[DESC_NUMB][2];
-
+int redirectionHanlders[DESC_NUMB];
 
 void shuffle(char* args[128], int currentPos, int argsNumber){
     while (currentPos+1 < argsNumber){
@@ -53,6 +53,7 @@ void closePipes(){
     for(int i=0; i<DESC_NUMB; i++){
         close(descryptors[i][0]);
         close(descryptors[i][1]);
+        close(redirectionHanlders[i]);
     }
 }
 
@@ -74,16 +75,18 @@ int main(int argc, char *argv[] ) {
 
 
     char singleLine[1024];
-    char *args[128];
-    char *commands[128];
+    char *args[512];
+    char *commands[512];
+    char buffer[4096];
     int argsNumber = 0;
     int commandNumber = 0;
-    int exitStatus;
+    char *redirectionName[128];
+    int redirected = 0;
+    int wasRedirected = 0;
     pid_t childProcess;
 
     initPipes();
 
-    int pid = getpid();
 
     while(fgets(singleLine, 1024, fileHandler)) {
         initPipes();
@@ -96,10 +99,16 @@ int main(int argc, char *argv[] ) {
         while ((commands[commandNumber++] = strtok(NULL, "|\n")) != NULL);
         commandNumber--;
 
-        //for (int i = 0; i < commandNumber; i++) printf("%s\n", commands[i]);
 
         for (int i = 0; i < commandNumber; ++i) {
             argsNumber = 0;
+
+            if (strstr(commands[i], ">")){
+                commands[i] = strtok(commands[i], ">");
+                redirectionName[i] = strtok(NULL, ">");
+                redirected = 1;
+                redirectionHanlders[i] = open(redirectionName[i],  O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+            }
 
             args[argsNumber++] = strtok(commands[i], " \n");
             while ((args[argsNumber++] = strtok(NULL, " \n")) != NULL);
@@ -116,20 +125,32 @@ int main(int argc, char *argv[] ) {
                 exit(EXIT_FAILURE);
             }
 
+
             if (childProcess == 0) {
-                //pid = getpid();
-                //printf("\nForked process with pid: %d\n", pid);
-                if(i != commandNumber -1)
-                    dup2(descryptors[i+1][1], STDOUT_FILENO);
-                //else close(descryptors[i][1]);
+
+                if((i != commandNumber -1) || redirected)
+                    dup2(descryptors[i+1][1],  STDOUT_FILENO);
+
                 dup2(descryptors[i][0], STDIN_FILENO);
+
                 if (execvp(args[0], args) == -1) {
                     perror("Error");
                     exit(-1);
                 }
             }
+
+            if (redirected){
+                int length = (int) read(descryptors[i+1][0], buffer, 4096);
+                write(redirectionHanlders[i], buffer, (size_t) length);
+                write(descryptors[i+1][1], buffer, (size_t) length);
+            }
+
             close(descryptors[i+1][1]);
+
+            redirected = 0;
         }
+
+
         printf("All comands: %d, waiting for them to exit\n", commandNumber);
         for (int i = 0; i < commandNumber; ++i) {
             wait(NULL);
