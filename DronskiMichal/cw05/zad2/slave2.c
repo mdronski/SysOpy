@@ -11,9 +11,6 @@ int main(int argc, char *argv[]) {
     FILE *pipeWriter;
     FILE *dataReader;
 
-
-
-
     for (int i = 0; i < N; ++i) {
         dataReader = popen("date '+%Y-%m-%d %H:%M:%S'", "r");
         pipeWriter = fopen(argv[1], "w");
