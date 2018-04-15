@@ -26,12 +26,17 @@ int main(int argc, char *argv[]) {
     sigAction.sa_sigaction = &intAction;
     sigaction(SIGINT, &sigAction, NULL);
 
+    mkfifo(argv[1], 0777);
+
     pipeReader = fopen(argv[1], "r");
 
-    while (1){
-        if(getline(&myBuffer, &bufferSize ,pipeReader) >= 0)
+    while (getline(&myBuffer, &bufferSize ,pipeReader) >= 0 ){
         printf("%s", myBuffer);
 
     }
 
+    fclose(pipeReader);
+    remove(argv[1]);
+
+    return 0;
 }

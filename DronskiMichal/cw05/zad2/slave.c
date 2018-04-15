@@ -7,17 +7,8 @@
 #include <time.h>
 #include <fcntl.h>
 
-void buildResult(char result[], char pid[], char date[]){
-    strcat(result, "Pid: ");
-    strcat(result, pid);
-    strcat(result, " - ");
-    strcat(result, date);
-
-}
-
 int main(int argc, char *argv[]) {
     srand( (unsigned) time(NULL));
-    //srand( time(NULL));
     if (argc != 3){
         printf("Wrong slave arguments!\n");
         exit(EXIT_FAILURE);
@@ -33,29 +24,24 @@ int main(int argc, char *argv[]) {
     FILE *dataReader;
 
 
-
     N = (int) strtol(argv[2], NULL, 10);
     pid = getpid();
     sprintf(pidBuffer, "%d", pid);
+    pipeWriter = open(argv[1], O_WRONLY);
 
 
     for (int i = 0; i < N; ++i) {
-        sleep((unsigned int) ((rand() + pid) % 10) );
         dataReader = popen("date", "r");
-        pipeWriter = open(argv[1], O_WRONLY);
         fgets(dateBuffer, 512, dataReader);
-
-        buildResult(resultBuffer, pidBuffer, dateBuffer);
-
+        sprintf(resultBuffer,"Pid: %s - %s", pidBuffer, dateBuffer);
         write(pipeWriter, resultBuffer, (size_t) strlen(resultBuffer));
-        close(pipeWriter);
         fclose(dataReader);
+        sleep((unsigned int) ((rand() + pid) % 2) );
 
-        memset(resultBuffer, 0, 512);
-        //srand( (unsigned) time(NULL));
     }
 
-    printf("returning from slave with pid: %d\n", pid);
+    close(pipeWriter);
+    //printf("returning from slave with pid: %d\n", pid);
 
 
 

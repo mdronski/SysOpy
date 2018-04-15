@@ -35,10 +35,15 @@ int main(int argc, char *argv[]) {
     sigAction.sa_sigaction = &intAction;
     sigaction(SIGINT, &sigAction, NULL);
 
-    mkfifo(argv[1], 0777);
 
     slaveNumber = (int) strtol(argv[2], NULL, 10);
     N = (int) strtol(argv[3], NULL, 10);
+
+    masterPid = fork();
+    if (masterPid == 0){
+        execlp("./master", "master", "myFifo", 0);
+    }
+
 
     for (int i = 0; i < slaveNumber; ++i) {
         childPids[i] = fork();
@@ -47,17 +52,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    masterPid = fork();
-    if (masterPid == 0){
-        execlp("./master", "master", "myFifo", 0);
-    }
 
     for (int i = 0; i < slaveNumber; ++i) {
         waitpid(childPids[i], NULL, WUNTRACED);
-        printf("%d'th slave exited\n", i);
+        //printf("%d'th slave exited\n", i);
     }
 
-    kill(masterPid, SIGINT);
+//    kill(masterPid, SIGINT);
     killpg(0, SIGINT);
 
     waitpid(masterPid, NULL, WUNTRACED);
