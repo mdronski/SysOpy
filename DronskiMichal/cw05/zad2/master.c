@@ -1,9 +1,12 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/stat.h>
 #include <zconf.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
+
 
 FILE *pipeReader;
 
@@ -26,8 +29,10 @@ int main(int argc, char *argv[]) {
     sigAction.sa_sigaction = &intAction;
     sigaction(SIGINT, &sigAction, NULL);
 
-    mkfifo(argv[1], 0777);
-
+    if(mkfifo(argv[1], 0777) == -1){
+        perror("error");
+    }
+    kill(getppid(), SIGRTMIN + 1);
     pipeReader = fopen(argv[1], "r");
 
     while (getline(&myBuffer, &bufferSize ,pipeReader) >= 0 ){

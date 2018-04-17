@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/stat.h>
 #include <zconf.h>
@@ -6,6 +7,7 @@
 #include <signal.h>
 #include <time.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
     srand( (unsigned) time(NULL));

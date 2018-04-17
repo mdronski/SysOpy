@@ -1,13 +1,21 @@
+#define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h>
+#include <sys/stat.h>
 #include <zconf.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <signal.h>
 #include <wait.h>
-#include <sys/stat.h>
+
 
 static void intAction(int sigNum, siginfo_t* info, void* vp){
     killpg(0, SIGINT);
     exit(EXIT_SUCCESS);
+}
+
+static void rtAction(int sigNum, siginfo_t* info, void* vp){
 }
 
 
@@ -35,6 +43,8 @@ int main(int argc, char *argv[]) {
     sigAction.sa_sigaction = &intAction;
     sigaction(SIGINT, &sigAction, NULL);
 
+    sigAction.sa_sigaction = &rtAction;
+    sigaction(SIGRTMIN+1, &sigAction, NULL);
 
     slaveNumber = (int) strtol(argv[2], NULL, 10);
     N = (int) strtol(argv[3], NULL, 10);
@@ -44,6 +54,7 @@ int main(int argc, char *argv[]) {
         execlp("./master", "master", "myFifo", 0);
     }
 
+    pause();
 
     for (int i = 0; i < slaveNumber; ++i) {
         childPids[i] = fork();

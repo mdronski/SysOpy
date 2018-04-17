@@ -1,6 +1,6 @@
 all: compile
 
 compile:
-	gcc master.c -o master
-	gcc slave.c -o slave
-	gcc main.c -o main
+	gcc -std=gnu99 master.c -o master
+	gcc -std=gnu99 slave.c -o slave
+	gcc -std=gnu99 main.c -o main

@@ -8,6 +8,7 @@
 #include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #define DESC_NUMB  10
 int descryptors[DESC_NUMB][2];
@@ -82,7 +83,6 @@ int main(int argc, char *argv[] ) {
     int commandNumber = 0;
     char *redirectionName[128];
     int redirected = 0;
-    int wasRedirected = 0;
     pid_t childProcess;
 
     initPipes();
