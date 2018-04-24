@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
         perror("error");
     }
     kill(getppid(), SIGRTMIN + 1);
+
     pipeReader = fopen(argv[1], "r");
 
     while (getline(&myBuffer, &bufferSize ,pipeReader) >= 0 ){

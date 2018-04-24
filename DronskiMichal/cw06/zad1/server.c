@@ -13,11 +13,11 @@
 #include <signal.h>
 
 #define MAX_CLIENTS  16
-#define SERVER_ID 31415
+#define SERVER_ID 244
 #define CONTENT_SIZE 4096
 
-int serverQueueID = -2;
-int active = 1;
+int serverQueueID = -99;
+int inUse = 1;
 int clientsInfo[MAX_CLIENTS][2];
 int clientsNumber = 0;
 
@@ -31,7 +31,7 @@ typedef struct Message{
     char content[CONTENT_SIZE];
 } Message;
 
-const size_t MSG_SIZE = sizeof(Message) ;
+const size_t MSG_SIZE = sizeof(Message) - sizeof(long);
 
 void errorExit(char *message) {
     printf("%s\n", message);
@@ -58,7 +58,7 @@ char* convertTime(const time_t* time){
 int buildMessage(Message *message){
     int clientQID = findQueueID(message->clientPID);
     if(clientQID == -1){
-        printf("Client Not Found!\n");
+        printf("could not find client\n");
         return -1;
     }
 
@@ -69,28 +69,28 @@ int buildMessage(Message *message){
 }
 
 void loginService(Message *message){
-    key_t clientQKey;
-    if(sscanf(message->content, "%d", &clientQKey) < 0)
-        errorExit("Error during reading client key");
+    key_t clientQueueKey;
+    if(sscanf(message->content, "%d", &clientQueueKey) < 0)
+        errorExit("could not receive client queue key");
 
-    int clientQID = msgget(clientQKey, 0);
-    if(clientQID == -1 )
-        errorExit("Error during reading client queue ID");
+    int clientQueueID = msgget(clientQueueKey, 0);
+    if(clientQueueID == -1 )
+        errorExit("could not receive client queue id");
 
     int clientPID = message->clientPID;
     message->mtype = INIT;
     message->clientPID = getpid();
 
     if(clientsNumber > MAX_CLIENTS - 1){
-        printf("Too many clients are already logged in\n");
+        printf("too many clients are already logged in\n");
         sprintf(message->content, "%d", -1);
     }else{
         clientsInfo[clientsNumber][0] = clientPID;
-        clientsInfo[clientsNumber++][1] = clientQID;
+        clientsInfo[clientsNumber++][1] = clientQueueID;
         sprintf(message->content, "%d", clientsNumber-1);
     }
 
-    if(msgsnd(clientQID, message, MSG_SIZE, 0) == -1)
+    if(msgsnd(clientQueueID, message, MSG_SIZE, 0) == -1)
         errorExit("Error during logging in");
 }
 
@@ -107,7 +107,7 @@ void mirrorService(Message *message){
         message->content[msgLen - i - 1] = buff;
     }
 
-    if(msgsnd(clientQueueID, message, MSG_SIZE, 0) == -1) errorExit("Error during mirror service");
+    if(msgsnd(clientQueueID, message, MSG_SIZE, 0) == -1) errorExit("could not send mirror response");
 }
 
 void calcService(Message *message){
@@ -120,7 +120,7 @@ void calcService(Message *message){
     fgets(message->content, CONTENT_SIZE, calc);
     pclose(calc);
 
-    if(msgsnd(clientQueueID, message, MSG_SIZE, 0) == -1) errorExit("Error during calc service");
+    if(msgsnd(clientQueueID, message, MSG_SIZE, 0) == -1) errorExit("could not send calc response");
 }
 
 void timeService(Message *message){
@@ -134,11 +134,7 @@ void timeService(Message *message){
     sprintf(message->content, "%s", timeStr);
     free(timeStr);
 
-    if(msgsnd(clientQID, message, MSG_SIZE, 0) == -1) errorExit("Error during time service");
-}
-
-void endService(Message *msg){
-    active = 0;
+    if(msgsnd(clientQID, message, MSG_SIZE, 0) == -1) errorExit("could not send time response");
 }
 
 void serverExecuteService(Message *message){
@@ -157,7 +153,7 @@ void serverExecuteService(Message *message){
             timeService(message);
             break;
         case END:
-            endService(message);
+            inUse = 0;
             break;
         default:
             break;
@@ -168,7 +164,7 @@ void removeQueue(){
     if(serverQueueID > -1){
         int tmp = msgctl(serverQueueID, IPC_RMID, NULL);
         if(tmp == -1){
-            printf("Error during removal of server queue\n");
+            printf("could not remove server queue\n");
         }
         printf("server queue removed\n");
     }
@@ -181,37 +177,37 @@ void intAction(int signo){
 
 int main(){
     if(atexit(removeQueue) == -1)
-        errorExit("Error during atexit function");
+        errorExit("could not set 'atexit' queue removal function");
     if(signal(SIGINT, intAction) == SIG_ERR)
-        errorExit("Error during signal");
+        errorExit("could not set signal function");
 
     Message message;
     struct msqid_ds queueState;
 
     char* path = getenv("HOME");
     if(path == NULL) {
-        errorExit("Error during loading HOME to program");
+        errorExit("could not get HOME variable");
     }
 
-    key_t publicKey = ftok(path, SERVER_ID);
-    if(publicKey == -1) {
-        errorExit("Error during generation key for server queue");
+    key_t serverKey = ftok(path, SERVER_ID);
+    if(serverKey == -1) {
+        errorExit("could not get server key from ftok");
     }
 
-    serverQueueID = msgget(publicKey, IPC_CREAT | IPC_EXCL | 0666);
+    serverQueueID = msgget(serverKey, IPC_CREAT | IPC_EXCL | 0666);
     if(serverQueueID == -1) {
-        errorExit("Error during creating server queue");
+        errorExit("could not create server queue");
     }
 
     while(1){
-        if(active == 0){
+        if(inUse == 0){
             if(msgctl(serverQueueID, IPC_STAT, &queueState) == -1)
                 errorExit("could not get state of server queue\n");
             if(queueState.msg_qnum == 0) break;
         }
 
         if(msgrcv(serverQueueID, &message, MSG_SIZE, 0, 0) < 0) {
-            errorExit("Error during receiving message");
+            errorExit("could not receive message");
         }
         serverExecuteService(&message);
     }

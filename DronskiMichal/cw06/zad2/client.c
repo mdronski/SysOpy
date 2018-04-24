@@ -6,19 +6,24 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
+#include <mqueue.h>
 #include <ctype.h>
 #include <time.h>
+#include <fcntl.h>
 #include <signal.h>
+#include <sys/msg.h>
+
 
 #define MAX_CLIENTS  16
-#define SERVER_ID 244
 #define CONTENT_SIZE 4096
+#define MAX_MQSIZE 9
+
 
 int sessionID = -2;
-int serverQueueID = -1;
-int clientQueueID = -1;
+mqd_t serverQueueID = -1;
+mqd_t clientQueueID = -1;
+char path[32];
+const char serverPath[] = "/queueServer";
 
 typedef enum messageType{
     LOGIN = 1, MIRROR = 2, CALC = 3, TIME = 4, END = 5, INIT = 6
@@ -30,7 +35,7 @@ typedef struct Message{
     char content[CONTENT_SIZE];
 } Message;
 
-const size_t MSG_SIZE = sizeof(Message) - sizeof(long);
+const size_t MSG_SIZE = sizeof(Message) - sizeof(long) ;
 
 void errorExit(char *message) {
     printf("%s\n", message);
@@ -38,17 +43,16 @@ void errorExit(char *message) {
     exit(EXIT_FAILURE);
 }
 
-void logIntoServer(key_t clientKey){
+void logIntoServer(){
     Message message;
     message.mtype = LOGIN;
     message.clientPID = getpid();
-    sprintf(message.content, "%d", clientKey);
 
-    if(msgsnd(serverQueueID, &message, MSG_SIZE, 0) == -1) {
+    if(mq_send(serverQueueID, (char *) &message, MSG_SIZE, 1) == -1) {
         errorExit("could not send logging request to server");
     }
-    if(msgrcv(clientQueueID, &message, MSG_SIZE, 0, 0) == -1) {
-        errorExit("could not receive logging response");
+    if(mq_receive(clientQueueID, (char *) &message, MSG_SIZE, NULL) == -1) {
+        errorExit("couldn't receive logging response");
     }
     if(sscanf(message.content, "%d", &sessionID) < 1) {
         errorExit("could not parse server response");
@@ -67,10 +71,10 @@ void mirrorRequest(Message *message){
         printf("this string is too long\n");
         return;
     }
-    if(msgsnd(serverQueueID, message, MSG_SIZE, 0) == -1) {
+    if(mq_send(serverQueueID, (char *) message, MSG_SIZE, 1) == -1) {
         errorExit("could not send mirror request to server");
     }
-    if(msgrcv(clientQueueID, message, MSG_SIZE, 0, 0) == -1) {
+    if(mq_receive(clientQueueID, (char *) message, MSG_SIZE, NULL) == -1) {
         errorExit("could not receive mirror response from server");
     }
     printf("%s", message->content);
@@ -83,10 +87,10 @@ void calcRequest(Message *message){
         printf("it is too long!\n");
         return;
     }
-    if(msgsnd(serverQueueID, message, MSG_SIZE, 0) == -1) {
+    if(mq_send(serverQueueID, (char *) message, MSG_SIZE, 0) == -1) {
         errorExit("could not send calc request to server");
     }
-    if(msgrcv(clientQueueID, message, MSG_SIZE, 0, 0) == -1) {
+    if(mq_receive(clientQueueID, (char *) message, MSG_SIZE, NULL) == -1) {
         errorExit("could not receive calc response from server");
     }
     printf("%s", message->content);
@@ -95,10 +99,10 @@ void calcRequest(Message *message){
 void timeRequest(Message *message){
     message->mtype = TIME;
 
-    if(msgsnd(serverQueueID, message, MSG_SIZE, 0) == -1) {
+    if(mq_send(serverQueueID, (char *) message, MSG_SIZE, 1) == -1) {
         errorExit("could not send time request to server");
     }
-    if(msgrcv(clientQueueID, message, MSG_SIZE, 0, 0) == -1) {
+    if(mq_receive(clientQueueID, (char *) message, MSG_SIZE, NULL) == -1) {
         errorExit("could not receive time response from server");
     }
     printf("%s\n", message->content);
@@ -106,28 +110,28 @@ void timeRequest(Message *message){
 
 void endRequest(Message *message){
     message->mtype = END;
-    if(msgsnd(serverQueueID, message, MSG_SIZE, 0) == -1) {
+    if(mq_send(serverQueueID, (char *) message, MSG_SIZE, 1) == -1) {
         errorExit("could not send end request");
     }
 }
 
-int openServerQueue(char *path, int ID){
-    int key = ftok(path, ID);
-    if(key == -1) errorExit("Error during generating queue key");
-
-    int QueueID = msgget(key, 0);
-    if(QueueID == -1) errorExit("Error during opening queue");
-
-    return QueueID;
-}
-
-void removeQueue(void){
+void removeQueue(){
     if(clientQueueID > -1){
-        if(msgctl(clientQueueID, IPC_RMID, NULL) == -1){
-            printf("Error during removal of server queue\n");
+
+        if(mq_close(clientQueueID) == -1){
+            printf("could not close client queue\n");
         }
-        else printf("\nclient queue removed\n");
-    }
+        else printf("client queue successfully closed\n");
+
+        if(mq_close(serverQueueID) == -1){
+            printf("could not close server queue\n");
+        }
+
+        if(mq_unlink(path) == -1){
+            printf("could not delete client queue\n");
+        }
+        else printf("client queue successfully deleted\n");
+    } else printf("client queue already not exists\n");
 }
 
 void intAction(int signo){
@@ -136,61 +140,57 @@ void intAction(int signo){
 }
 
 void handleSession(){
-    char service[32];
+    char request[32];
     Message message;
-
     while(1){
         message.clientPID = getpid();
         printf("Enter request: ");
-        if(fgets(service, 32, stdin) == NULL){
+        if(fgets(request, 32, stdin) == NULL){
             printf("could not read request\n");
             continue;
         }
-        int n = (int) strlen(service);
-        if(service[n-1] == '\n') service[n-1] = 0;
+        int n = (int) strlen(request);
+        if(request[n-1] == '\n') request[n-1] = 0;
 
-        if(strcmp(service, "mirror") == 0){
+
+        if(strcmp(request, "mirror") == 0){
             mirrorRequest(&message);
-        }else if(strcmp(service, "calc") == 0){
+        }else if(strcmp(request, "calc") == 0){
             calcRequest(&message);
-        }else if(strcmp(service, "time") == 0){
+        }else if(strcmp(request, "time") == 0){
             timeRequest(&message);
-        }else if(strcmp(service, "end") == 0){
+        }else if(strcmp(request, "end") == 0){
             endRequest(&message);
             exit(EXIT_SUCCESS);
-        }else printf("wrong request\n");
+        }else printf("Wrong command!\n");
     }
 }
 
 int main(){
 
     if(atexit(removeQueue) == -1) {
-        errorExit("could not set 'atexit' queue removal function");
+        errorExit("could not set 'atexit' queue remove function");
     }
     if(signal(SIGINT, intAction) == SIG_ERR) {
         errorExit("could not set signal function");
     }
 
-    char* path = getenv("HOME");
-    if(path == NULL) {
-        errorExit("could not get HOME variable");
-    }
+    sprintf(path, "/%d", getpid());
 
-    serverQueueID = openServerQueue(path, SERVER_ID);
+    serverQueueID = mq_open(serverPath, O_WRONLY);
+    if(serverQueueID == -1) errorExit("could not open server queue\n");
 
-    key_t clientKey = ftok(path, getpid());
-    if(clientKey == -1) {
-        errorExit("could not generate client queue key");
-    }
+    struct mq_attr posixAttr;
+    posixAttr.mq_maxmsg = MAX_MQSIZE;
+    posixAttr.mq_msgsize = MSG_SIZE;
 
-    clientQueueID = msgget(clientKey, IPC_CREAT | IPC_EXCL | 0666);
-    if(clientQueueID == -1) {
-        errorExit("could not create client queue");
-    }
+    clientQueueID = mq_open(path, O_RDONLY | O_CREAT | O_EXCL, 0666, &posixAttr);
+    if(clientQueueID == -1) errorExit("could not create client queue");
 
-    logIntoServer(clientKey);
+    logIntoServer();
 
     handleSession();
+
 }
 
 
