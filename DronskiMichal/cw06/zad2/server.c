@@ -209,11 +209,11 @@ int main(){
 
     struct mq_attr currentState;
 
-    struct mq_attr posixAttr;
-    posixAttr.mq_maxmsg = MAX_MQSIZE;
-    posixAttr.mq_msgsize = MSG_SIZE;
+    struct mq_attr attr;
+    attr.mq_maxmsg = MAX_MQSIZE;
+    attr.mq_msgsize = MSG_SIZE;
 
-    serverQueueID = mq_open(serverPath, O_RDONLY | O_CREAT | O_EXCL, 0666, &posixAttr);
+    serverQueueID = mq_open(serverPath, O_RDONLY | O_CREAT | O_EXCL, 0666, &attr);
     if(serverQueueID == -1) errorExit("could not create server queue");
 
     Message message;
