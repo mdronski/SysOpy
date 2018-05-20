@@ -11,10 +11,10 @@ int shared_memory_desc;
 void *shared_mem_address;
 sem_t *barber_sem, *queue_sem, *chair_sem;
 
-int main(){
+int main(int argc, char *argv[]){
     atexit(close_all);
 
-    int size = 10;
+    int size = atoi(argv[1]);
 
     struct sigaction int_action;
     memset(&int_action, 0, sizeof(int_action));

@@ -18,8 +18,11 @@ void go_to_barber();
 void client_factory(int client_count);
 int try_to_get_haircut();
 
-int main(){
+int main(int argc, char *argv[]){
     atexit(close_all);
+
+    int client_count = atoi(argv[1]);
+    cut_required = atoi(argv[2]);
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
@@ -28,7 +31,7 @@ int main(){
     check_error(sigaction(SIGINT, &act, NULL), -1);
     configure_shared_memory();
 
-    client_factory(300);
+    client_factory(client_count);
     return 0;
 
 }

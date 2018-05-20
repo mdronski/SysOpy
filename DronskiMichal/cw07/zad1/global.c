@@ -2,7 +2,7 @@
 #include <time.h>
 #include "global.h"
 
-void *shared_mem_address;
+int *shared_mem_address;
 
 
 void check_error(int var, int err_number){

@@ -7,12 +7,12 @@ pid_t *barber_queue_init(int size);
 
 int sem_group_id = -1;
 int shared_mem_id = -1;
-void *shared_mem_address;
+int *shared_mem_address;
 
-int main(){
+int main(int argc, char *argv[]){
     atexit(close_all);
 
-    int size = 10;
+    int size = atoi(argv[1]);
 
     struct sigaction int_action;
     memset(&int_action, 0, sizeof(int_action));

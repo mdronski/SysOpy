@@ -3,7 +3,7 @@
 
 int sem_group_id = -1;
 int shared_mem_id = -1;
-void *shared_mem_address;
+int *shared_mem_address;
 int cut_counter = 0;
 int cut_required = 2; //////////////////
 
@@ -14,8 +14,11 @@ void go_to_barber();
 void client_factory(int client_count);
 int try_to_get_haircut();
 
-int main(){
+int main(int argc, char *argv[]){
     atexit(close_all);
+
+    int client_count = atoi(argv[1]);
+    cut_required = atoi(argv[2]);
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
@@ -24,7 +27,7 @@ int main(){
     check_error(sigaction(SIGINT, &act, NULL), -1);
     configure_shared_memory();
 
-    client_factory(5);
+    client_factory(client_count);
     return 0;
 
 }
@@ -84,10 +87,22 @@ void client_factory(int client_count) {
 }
 
 void go_to_barber() {
+
+    struct sembuf wait_op;
+    wait_op.sem_flg = 0;
+    wait_op.sem_num = CHAIR_SEM_NUMBER;
+    wait_op.sem_op = 0;
+
+
     while(cut_counter < cut_required) {
         int in_barber_queue = try_to_get_haircut();
 
         if (in_barber_queue == 0) {
+            int client_count_rem = (int) shared_mem_address[CLIENTS_COUNT_INDEX];
+            for (int i = 0; i < client_count_rem ; ++i) {
+                check_error(semop(sem_group_id, &wait_op, 1), -1);
+            }
+
             take_semaphore(sem_group_id, CHAIR_SEM_NUMBER);
             ++cut_counter;
             printf("%zu - %d is having hair cut.\n", get_time(), getpid());
