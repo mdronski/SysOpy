@@ -29,17 +29,11 @@ pthread_t *consumers;
 
 pthread_mutex_t consumer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t producer_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t tmp_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *buffer_mutexes;
 
 pthread_cond_t are_filled_slots = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t are_filled_slots_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_cond_t slot_consumed = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t slot_consumed_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-pthread_cond_t producers_working = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t producers_working_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void exit_handler(int signo){
     printf("\n\nEXIT PROCEDURE\n\n");
@@ -83,7 +77,15 @@ void initialise(){
 }
 
 void compare_and_print(int array_index, char *string){
+
+    if (print_type == 1){
+        printf("At index: %d, consumed string: \n%s\n",
+               array_index, string);
+        return;
+    }
+
     int string_length = (int) strlen(string);
+
     switch (compare_type) {
         case PRINT_SHORTER:
             if (string_length < L){
@@ -130,7 +132,7 @@ void *producer(void *args){
         mutex_lock(&producer_mutex);
 
         while (global_buffer[producer_position] != NULL){
-            pthread_cond_wait(&slot_consumed, &slot_consumed_mutex);
+            pthread_cond_wait(&slot_consumed, &producer_mutex);
         }
 
 
@@ -139,6 +141,11 @@ void *producer(void *args){
         global_buffer[producer_position] = malloc((str_length + 1) * sizeof(char));
 
         strcpy(global_buffer[producer_position], buffer);
+
+        if (print_type == 1){
+            printf("At index: %d, produced string: \n%s\n",
+                   producer_position, buffer);
+        }
 
         pthread_cond_broadcast(&are_filled_slots);
 
@@ -160,7 +167,7 @@ void *consumer(void *args){
         mutex_lock(&consumer_mutex);
 
         while (global_buffer[consumer_position] == NULL) {
-            pthread_cond_wait(&are_filled_slots, &are_filled_slots_mutex);
+            pthread_cond_wait(&are_filled_slots, &consumer_mutex);
         }
 
         mutex_lock(&buffer_mutexes[consumer_position]);
@@ -177,7 +184,7 @@ void *consumer(void *args){
 
         consumer_position = (consumer_position + 1) % buffer_size;
         mutex_unlock(&consumer_mutex);
-        usleep(1000);
+//        usleep(1000);
     }
 
 }

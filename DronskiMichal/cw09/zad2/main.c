@@ -21,7 +21,6 @@ int print_type;
 int nk;
 
 char **global_buffer;
-int buffer_size = 20;
 int consumer_position = 0;
 int producer_position = 0;
 int producers_finished = 0;
@@ -38,7 +37,9 @@ sem_t full_places;
 
 
 
+
 void exit_handler(int signo){
+
     printf("\n\nEXIT PROCEDURE\n\n");
     for (int j = 0; j < P; ++j) {
         pthread_cancel(producers[j]);
@@ -80,11 +81,24 @@ void initialise(){
         check_error(sem_init(&buffer_semaphores[i], 0, 1), 0, "semaphore initialisation");
     }
 
+
+
     signal(SIGINT, exit_handler);
     signal(SIGALRM, exit_handler);
+
+
 }
 
 void compare_and_print(int array_index, char *string){
+
+    if (print_type == 1){
+        printf("At index: %d, consumed string: \n%s\n",
+               array_index, string);
+        fflush(stdout);
+
+        return;
+    }
+
     int string_length = (int) strlen(string);
     switch (compare_type) {
         case PRINT_SHORTER:
@@ -132,12 +146,20 @@ void *producer(void *args){
 
         strcpy(global_buffer[producer_position], buffer);
 
+        if (print_type == 1){
+            printf("At index: %d, produced string: \n%s\n",
+                   producer_position, buffer);
+            fflush(stdout);
+
+        }
+
         sem_post(&full_places);
 
         sem_post(&buffer_semaphores[producer_position]);
 
-        producer_position = (producer_position + 1) % buffer_size;
+        producer_position = (producer_position + 1) % N;
         sem_post(&producer_sem);
+
     }
 
     producers_finished ++;
@@ -164,11 +186,12 @@ void *consumer(void *args){
         sem_post(&free_places);
 
         sem_post(&buffer_semaphores[consumer_position]);
+        consumer_position = (consumer_position + 1) % N;
 
-        consumer_position = (consumer_position + 1) % buffer_size;
         sem_post(&consumer_sem);
-        usleep(1000);
+
     }
+
 
 }
 
@@ -222,18 +245,23 @@ void configure(){
     K = read_integer(configuration_file);
     N = read_integer(configuration_file);
 
+
     char buffer[256];
     fscanf(configuration_file, "%s", buffer);
     text_source = fopen(buffer, "r");
     if (text_source == NULL){
         printf("ERROR\n");
     }
+
     L = read_integer(configuration_file);
     compare_type = read_integer(configuration_file);
     print_type = read_integer(configuration_file);
     nk = read_integer(configuration_file);
 
+
     fclose(configuration_file);
+
+//    fprintf(stderr ,"%d %d %d %s %d %d %d %d\n", P, K, N, buffer, L, compare_type, print_type, nk);
 
     if (nk > 0){
         alarm((unsigned int) nk);
