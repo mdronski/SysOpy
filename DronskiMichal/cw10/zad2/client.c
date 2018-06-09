@@ -10,30 +10,7 @@
 #include <pthread.h>
 #include <zconf.h>
 #include <signal.h>
-
-typedef struct Client_info {
-    int socket_desc;
-    char *name;
-    int ping_balance;
-    int received_counter;
-}Client_info ;
-
-typedef enum Message_Type{
-    LOGIN = 0,
-    LOGOUT = 1,
-    REQUEST = 2,
-    RESULT = 3,
-    SUCCESS = 4,
-    FAILSIZE = 5,
-    FAILNAME = 6,
-    PING = 7,
-    PONG = 8,
-}Message_Type;
-
-typedef enum Connection_Type{
-    LOCAL = 0,
-    WEB = 1
-}Connection_Type;
+#include "globals.h"
 
 enum Connection_Type connection_type;
 char *name;
@@ -47,14 +24,9 @@ void error_exit(char *error_message);
 void validate_and_initialise(int argc, char **argv);
 void connect_to_server();
 void login_to_server();
-void send_message(enum Message_Type message_type, void *message);
+void send_message(enum Message_Type message_type, int counter, int  result);
 void sigint_handler(int signo);
-void send_name(char message_type);
 void handle_request();
-
-
-
-
 
 
 int main(int argc, char** argv){
@@ -72,15 +44,12 @@ int main(int argc, char** argv){
             error_exit("reading server response message type failure");
 
         if(message_type == PING){
-            send_name(PONG);
+            send_message(PONG, 0, 0);
         }else if(message_type == REQUEST){
             handle_request();
         }
     }
-
-    return 0;
 }
-
 
 void handle_request(){
     char operator;
@@ -96,54 +65,27 @@ void handle_request(){
     if(read(socket_desc, &arg2, sizeof(int)) != sizeof(int))
         error_exit("counter read failure");
 
-    arg1 = ntohl(arg1);
-    arg2 = ntohl(arg2);
+    arg1 = ntohl((uint32_t) arg1);
+    arg2 = ntohl((uint32_t) arg2);
 
     result = operator == '+' ? arg1 + arg2 :
              operator == '-' ? arg1 - arg2 :
              operator == '*' ? arg1 * arg2 :
              arg1 / arg2;
 
-    printf("%d %c %d = %d\n", arg1, operator, arg2, result);
+    printf("Task %d: %d %c %d = %d\n", ntohl((uint32_t) counter), arg1, operator, arg2, result);
 
+    result = htonl((uint32_t) result);
+    send_message(RESULT, counter, result);
 
-    short message_length = (short)strlen(name) + 1;
-    short message_length2 = htons(message_length);
-    result = htonl(result);
-    char message_type = RESULT;
-
-    if(write(socket_desc, &message_type, 1) != 1)
-        error_exit("message_type write failure");
-    if(write(socket_desc, &message_length2, 2) != 2)
-        error_exit("message_length htonsed write failure");
-    if(write(socket_desc, &counter, sizeof(int)) != sizeof(int))
-        error_exit("counter write failure");
-    if(write(socket_desc, &result, sizeof(int)) != sizeof(int))
-        error_exit("result write failure");
-    if(write(socket_desc, name, message_length) != message_length)
-        error_exit("name write failure");
-}
-
-
-void send_name(char message_type1){
-    char message_type = message_type1;
-    short message_length = (short) strlen(name) + 1;
-    short message_length2 = htons(message_length);
-
-    if(write(socket_desc, &message_type, 1) != 1)
-        error_exit("login type send failure");
-    if(write(socket_desc, &message_length2, 2) != 2)
-        error_exit("login type_size send failure");
-    if(write(socket_desc, name, message_length) != message_length)
-        error_exit("login name send failure");
 }
 
 void login_to_server(){
     char response_type;
 
-    send_name(LOGIN);
+    send_message(LOGIN, 0, 0);
 
-    if(read(socket_desc, &response_type, sizeof(response_type)) != sizeof(response_type))
+    if(read(socket_desc, &response_type, 1) != 1)
         error_exit("login response failure");
 
     switch (response_type) {
@@ -162,18 +104,22 @@ void login_to_server(){
     }
 }
 
-void send_message(enum Message_Type message_type, void *message){
+void send_message(enum Message_Type message_type, int counter, int result){
 
-    char mes_type = message_type;
-    if (write(socket_desc, &mes_type, sizeof(mes_type)) != sizeof(mes_type))
-        error_exit("unable to send message");
+    Message message;
 
-    int message_size = htons(sizeof(&message));
-    if (write(socket_desc, &message_size, sizeof(message_size)) != sizeof(message_size))
-        error_exit("unable to send message");
+    for (int i = 0; i < 64; ++i) {
+        message.name[i] = 0;
+    }
+    strcpy(message.name, name);
 
-    if (write(socket_desc, &message, sizeof(&message)) != sizeof(message))
-        error_exit("unable to send message");
+    message.counter = counter;
+    message.result = result;
+    message.connection_type = connection_type;
+    message.type = message_type;
+
+    if (write(socket_desc, &message, sizeof(Message)) != sizeof(Message))
+        perror("message send failure");
 
 }
 
@@ -185,9 +131,12 @@ void connect_to_server(){
             local_address.sun_family = AF_UNIX;
             strcpy(local_address.sun_path, unix_path);
 
-            socket_desc = socket(AF_UNIX, SOCK_STREAM, 0);
+            socket_desc = socket(AF_UNIX, SOCK_DGRAM, 0);
             if (socket_desc == -1)
                 error_exit("local socket creation failure");
+
+            if (bind(socket_desc,(const struct sockaddr *) &local_address, sizeof(sa_family_t)) == -1)
+                error_exit("local bind failure");
 
             if (connect(socket_desc,(const struct sockaddr *) &local_address, sizeof(local_address)) == -1)
                 error_exit("local connection failure");
@@ -197,12 +146,19 @@ void connect_to_server(){
         case WEB: {
             struct sockaddr_in web_address;
             web_address.sin_family = AF_INET;
-            web_address.sin_port = htons((uint16_t) port_number);
-            web_address.sin_addr.s_addr = htonl(ip_address);
+            web_address.sin_port = 0;
+            web_address.sin_addr.s_addr = INADDR_ANY;
 
-            socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+            socket_desc = socket(AF_INET, SOCK_DGRAM, 0);
             if(socket_desc == -1)
                 error_exit("web socket creation failure");
+
+            if (bind(socket_desc, (const struct sockaddr *) &web_address, sizeof(web_address)) == -1)
+                error_exit("web socket bind failure");
+
+            web_address.sin_family = AF_INET;
+            web_address.sin_port = htons((uint16_t) port_number);
+            web_address.sin_addr.s_addr = htonl((uint32_t) ip_address);
 
             if(connect(socket_desc,(const struct sockaddr *) &web_address, sizeof(web_address)) == -1)
                 error_exit("web connection failure");
@@ -262,9 +218,6 @@ void error_exit(char *error_message) {
 
 void clean_exit(){
 
-    if(shutdown(socket_desc, SHUT_RDWR) == -1){
-        perror("shut down socket failure");
-    }
 
     if(close(socket_desc) == -1){
         perror("closing socket failure");
@@ -275,7 +228,7 @@ void clean_exit(){
 
 void sigint_handler(int signo){
 
-    send_name(LOGOUT);
+    send_message(LOGOUT, 0, 0);
     exit(EXIT_SUCCESS);
 
 }
